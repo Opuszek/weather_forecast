@@ -22,7 +22,7 @@ public class DatabaseConfiguration {
         try {
             prop.load(DatabaseConfiguration.class
                     .getClassLoader()
-                    .getResourceAsStream("application.properties"));
+                    .getResourceAsStream("database.properties"));
             return prop.getProperty(property);
         } catch (IOException ex) {
             ex.printStackTrace();

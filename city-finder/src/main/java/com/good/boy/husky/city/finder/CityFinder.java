@@ -1,6 +1,7 @@
 package com.good.boy.husky.city.finder;
 
 import com.good.boy.husky.city.finder.service.GeolocalizeService;
+import com.good.boy.husky.city.finder.utilities.Utilities;
 import com.good.boy.husky.database.entity.CitySimple;
 import com.good.boy.husky.database.service.DatabaseService;
 import java.sql.SQLException;

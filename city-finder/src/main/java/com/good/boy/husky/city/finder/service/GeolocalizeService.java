@@ -1,5 +1,6 @@
 package com.good.boy.husky.city.finder.service;
 
+import com.good.boy.husky.city.finder.utilities.Utilities;
 import com.good.boy.husky.database.entity.CityError;
 import com.good.boy.husky.database.entity.CityLocation;
 import com.good.boy.husky.database.entity.CitySimple;
@@ -40,7 +41,8 @@ public class GeolocalizeService {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(uri)
                     .timeout(Duration.of(REQUEST_TIMEOUT, SECONDS))
-                    .header("X-Api-Key", "oFlgWSh/uWCO8shh0w9+3w==WxnuhK9QmkYdqt79")
+                    .header(Utilities.getProperty("api_key_header"), 
+                            Utilities.getProperty("api_key"))
                     .GET()
                     .build();
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
