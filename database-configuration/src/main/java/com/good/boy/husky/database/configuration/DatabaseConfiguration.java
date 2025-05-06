@@ -1,7 +1,11 @@
 package com.good.boy.husky.database.configuration;
 
-import java.io.IOException;
-import java.util.Properties;
+import com.good.boy.husky.database.utilities.Utilities;
+import static com.good.boy.husky.database.utilities.Utilities.getProperty;
+import java.security.InvalidParameterException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class DatabaseConfiguration {
     
@@ -16,18 +20,18 @@ public class DatabaseConfiguration {
     public static String getUrl() {
         return getProperty("url");
     }
-
-    private static String getProperty(String property) {
-        Properties prop = new Properties();
-        try {
-            prop.load(DatabaseConfiguration.class
-                    .getClassLoader()
-                    .getResourceAsStream("database.properties"));
-            return prop.getProperty(property);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            return "";
-        }
+    
+    public static void validateConfiguration() {
+        List<String> missingParameters = Arrays.stream(new String[]{"user", "password", "url"})
+                .filter(Utilities::propertyDoesNotExist)
+                .collect(Collectors.toList());
+        if (!missingParameters.isEmpty()) {
+              throw new InvalidParameterException(
+                      String.format("Parameter(s) %s is/are missing.",  
+                              String.join(",", missingParameters)));
+        }        
     }
+    
+    
 
 }

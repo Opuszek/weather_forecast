@@ -19,6 +19,10 @@ import java.util.List;
  * @author opuszek
  */
 public class DatabaseService {
+    
+    public DatabaseService() {
+        DatabaseConfiguration.validateConfiguration();
+    }
 
     public List<CitySimple> getListOfUnlocatedCities() throws SQLException {
         try (Connection con = getConnection()) {

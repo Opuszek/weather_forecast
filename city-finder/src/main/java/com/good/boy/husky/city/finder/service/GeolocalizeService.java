@@ -1,6 +1,6 @@
 package com.good.boy.husky.city.finder.service;
 
-import com.good.boy.husky.city.finder.utilities.Utilities;
+import com.good.boy.husky.database.utilities.Utilities;
 import com.good.boy.husky.database.entity.CityError;
 import com.good.boy.husky.database.entity.CityLocation;
 import com.good.boy.husky.database.entity.CitySimple;

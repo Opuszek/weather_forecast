@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.good.boy.husky.city.finder.utilities;
+package com.good.boy.husky.database.utilities;
 
 import com.good.boy.husky.database.configuration.DatabaseConfiguration;
 import java.io.IOException;
@@ -25,6 +25,15 @@ public class Utilities {
             ex.printStackTrace();
             return "";
         }
+    }
+
+    public static boolean propertyExists(String propertyName) {
+        String propertyValue = getProperty(propertyName);
+        return propertyValue != null && !propertyValue.trim().isEmpty();
+    }
+
+    public static boolean propertyDoesNotExist(String propertyName) {
+        return !propertyExists(propertyName);
     }
 
 }
