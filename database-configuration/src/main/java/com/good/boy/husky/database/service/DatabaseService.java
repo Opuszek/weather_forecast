@@ -36,7 +36,7 @@ public class DatabaseService {
         try (Statement stmt = con.createStatement()) {
             String selectSql = "SELECT id,name,country "
                     + "FROM city "
-                    + "where located=0";
+                    + "where locatedOrInvalid=0";
             try (ResultSet resultSet = stmt.executeQuery(selectSql)) {
                 while (resultSet.next()) {
                     CitySimple city = new CitySimple();

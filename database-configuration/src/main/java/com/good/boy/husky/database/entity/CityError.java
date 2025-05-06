@@ -4,8 +4,15 @@ public class CityError {
 
     private int id;
     private String error;
-    private int numberOfTries;
-    private boolean located;
+    private boolean locatedOrInvalid;
+
+    public CityError(int id, String error, boolean located) {
+        this.id = id;
+        this.error = error;
+        this.locatedOrInvalid = located;
+    }
+    
+    
 
     public int getId() {
         return id;
@@ -23,28 +30,21 @@ public class CityError {
         this.error = error;
     }
 
-    public int getNumberOfTries() {
-        return numberOfTries;
+    public boolean isLocatedOrInvalid() {
+        return locatedOrInvalid;
     }
 
-    public void setNumberOfTries(int numberOfTries) {
-        this.numberOfTries = numberOfTries;
-    }
-
-    public boolean isLocated() {
-        return located;
-    }
-
-    public void setLocated(boolean located) {
-        this.located = located;
+    public void setLocatedOrInvalid(boolean locatedOrInvalid) {
+        this.locatedOrInvalid = locatedOrInvalid;
     }
 
     @Override
     public String toString() {
-        return "CityError{" + "id=" + id + ", error=" + error 
-                + ", numberOfTries=" + numberOfTries + ", located=" 
-                + located + '}';
+        return "CityError{" + "id=" + id + ", error=" + error + 
+                ", locatedOrInvalid=" + locatedOrInvalid + '}';
     }
+    
+    
 
     
 
