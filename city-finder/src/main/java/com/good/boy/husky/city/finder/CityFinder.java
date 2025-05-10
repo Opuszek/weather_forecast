@@ -1,7 +1,6 @@
 package com.good.boy.husky.city.finder;
 
 import com.good.boy.husky.city.finder.service.GeolocalizeService;
-import com.good.boy.husky.database.utilities.Utilities;
 import com.good.boy.husky.database.entity.CitySimple;
 import com.good.boy.husky.database.service.DatabaseService;
 import java.sql.SQLException;
@@ -15,7 +14,14 @@ public class CityFinder {
 
     public static void main(String[] args) throws SQLException {
         List<CitySimple> unlocatedCities = databaseService.getListOfUnlocatedCities();
-        unlocatedCities.stream().forEach(geolocalizeService::geolocalize);
+        unlocatedCities.stream()
+                .map(geolocalizeService::geolocalize)
+                .forEach(either -> {
+                    either.left().forEach(System.out::println);
+                    either.right().forEach(System.out::println);
+                }
+                );
+
     }
 
 }

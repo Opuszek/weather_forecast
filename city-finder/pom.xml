@@ -22,6 +22,11 @@
             <artifactId>vavr</artifactId>
             <version>0.10.6</version> 
         </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20250107</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
