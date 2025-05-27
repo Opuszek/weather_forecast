@@ -14,5 +14,6 @@
     <modules>
         <module>database-configuration</module>
         <module>city-finder</module>
+        <module>weather-finder</module>
     </modules>
 </project>
