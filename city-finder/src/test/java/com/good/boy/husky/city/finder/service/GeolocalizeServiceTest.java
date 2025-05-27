@@ -131,7 +131,7 @@ public class GeolocalizeServiceTest {
         Assertions.assertTrue(result.isLeft());
         CityError cityError = result.getLeft();
         assertThat(cityError.getId(), equalTo(CITY_ID));
-        assertThat(cityError.isLocatedOrInvalid(), is(invalidate));
+        assertThat(cityError.isInvalid(), is(invalidate));
     }
 
     private CitySimple testInput() {

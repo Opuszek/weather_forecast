@@ -1,13 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
 package com.good.boy.husky.weather.forecast;
 
-/**
- *
- * @author opuszek
- */
 public class WeatherForecast {
 
     public static void main(String[] args) {

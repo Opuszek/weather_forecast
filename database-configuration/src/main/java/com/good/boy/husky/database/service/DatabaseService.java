@@ -50,7 +50,7 @@ public class DatabaseService {
         try (Statement stmt = con.createStatement()) {
             String selectSql = "SELECT id,name,country "
                     + "FROM city "
-                    + "where locatedOrInvalid=0";
+                    + "where located=0 and invalid=0";
             try (ResultSet resultSet = stmt.executeQuery(selectSql)) {
                 while (resultSet.next()) {
                     CitySimple city = new CitySimple();
@@ -67,7 +67,7 @@ public class DatabaseService {
     public void updateCityLocation(CityLocation loc, Connection con) throws SQLException {
         try (Statement stmt = con.createStatement()) {
             String selectSql = String.format("UPDATE city "
-                    + "SET longitude=%f, latitude=%f, error=NULL, locatedOrInvalid=1 "
+                    + "SET longitude=%f, latitude=%f, error=NULL, located=1 "
                     + "where id=%d", loc.getLongitude(), loc.getLatitude(), loc.getId());
             stmt.executeUpdate(selectSql);
         }
@@ -76,8 +76,8 @@ public class DatabaseService {
     public void logCityLocationError(CityError err, Connection con) throws SQLException {
         try (Statement stmt = con.createStatement()) {
             String selectSql = String.format("UPDATE city "
-                    + "SET error=\"%s\", locatedOrInvalid=%B, number_of_tries=number_of_tries+1 "
-                    + "where id=%d", err.getError(), err.isLocatedOrInvalid(), err.getId());
+                    + "SET error=\"%s\", invalid=%B, number_of_tries=number_of_tries+1 "
+                    + "where id=%d", err.getError(), err.isInvalid(), err.getId());
             stmt.executeUpdate(selectSql);
         }
     }
