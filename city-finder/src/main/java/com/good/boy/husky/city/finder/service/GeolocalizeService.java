@@ -16,7 +16,6 @@ import java.time.Duration;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,6 +36,10 @@ public class GeolocalizeService {
         this.client = HttpClient
                 .newBuilder()
                 .build();
+    }
+
+    GeolocalizeService(HttpClient client) {
+        this.client = client;
     }
 
     public Either<CityError, CityLocation> geolocalize(CitySimple city) {
