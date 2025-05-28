@@ -1,13 +1,10 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.good.boy.husky.database.service;
 
 import com.good.boy.husky.database.configuration.DatabaseConfiguration;
 import com.good.boy.husky.database.entity.CityError;
 import com.good.boy.husky.database.entity.CityLocation;
 import com.good.boy.husky.database.entity.CitySimple;
+import com.good.boy.husky.database.entity.WeatherForecast;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -16,10 +13,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author opuszek
- */
 public class DatabaseService {
 
     public DatabaseService() {
@@ -28,7 +21,19 @@ public class DatabaseService {
 
     public List<CitySimple> getListOfUnlocatedCities() throws SQLException {
         try (Connection con = getConnection()) {
-            return getListOfUnlocatedCities(con);
+            return getListOfCities(con, false, false);
+        }
+    }
+
+    public List<CitySimple> getListOfLocatedCities() throws SQLException {
+        try (Connection con = getConnection()) {
+            return getListOfCities(con, true, false);
+        }
+    }
+
+    public List<CityLocation> getListOfCityLocations() throws SQLException {
+        try (Connection con = getConnection()) {
+            return getListOfCityLocations(con);
         }
     }
 
@@ -38,19 +43,27 @@ public class DatabaseService {
         }
     }
 
+    public void addWeatherForecast(WeatherForecast wf) throws SQLException {
+        try (Connection con = getConnection()) {
+            addWeatherForecast(wf, con);
+        }
+    }
+
     public void logCityLocationError(CityError error) throws SQLException {
         try (Connection con = getConnection()) {
             logCityLocationError(error, con);
         }
     }
 
-    private List<CitySimple> getListOfUnlocatedCities(Connection con)
+    private List<CitySimple> getListOfCities(Connection con,
+            boolean located, boolean invalid)
             throws SQLException {
         List<CitySimple> cities = new ArrayList<>();
         try (Statement stmt = con.createStatement()) {
-            String selectSql = "SELECT id,name,country "
+            String selectSql = String.format("SELECT id,name,country "
                     + "FROM city "
-                    + "where located=0 and invalid=0";
+                    + "where located=%d and invalid=%d", located ? 1 : 0,
+                    invalid ? 1 : 0);
             try (ResultSet resultSet = stmt.executeQuery(selectSql)) {
                 while (resultSet.next()) {
                     CitySimple city = new CitySimple();
@@ -64,13 +77,44 @@ public class DatabaseService {
         return cities;
     }
 
+    private List<CityLocation> getListOfCityLocations(Connection con) throws SQLException {
+        List<CityLocation> locations = new ArrayList<>();
+        try (Statement stmt = con.createStatement()) {
+            String selectSql = "SELECT id,longitude,latitude "
+                    + "FROM city "
+                    + "where located=1 and invalid=0";
+            try (ResultSet resultSet = stmt.executeQuery(selectSql)) {
+                while (resultSet.next()) {
+                    CityLocation city = new CityLocation.CityLocationBuilder()
+                            .id(resultSet.getInt("id"))
+                            .longitude(resultSet.getFloat("longitude"))
+                            .latitude(resultSet.getFloat("latitude")).build();
+                    locations.add(city);
+                }
+            }
+        }
+        return locations;
+    }
+
     public void updateCityLocation(CityLocation loc, Connection con) throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            String selectSql = String.format("UPDATE city "
+            String updateSql = String.format("UPDATE city "
                     + "SET longitude=%f, latitude=%f, error=NULL, located=1 "
                     + "where id=%d", loc.getLongitude(), loc.getLatitude(), loc.getId());
-            stmt.executeUpdate(selectSql);
+            stmt.executeUpdate(updateSql);
         }
+    }
+
+    public void addWeatherForecast(WeatherForecast wf, Connection con) throws SQLException {
+        try (Statement stmt = con.createStatement()) {
+            String insertSql = String.format("INSERT INTO temperature_forecast "
+                    + "(city_id, max_temperature, min_temperature, rain_sum, sunrise, sunset, day)\n "
+                    + "values (%d, %f, %f, %f, FROM_UNIXTIME(%d), FROM_UNIXTIME(%d), FROM_UNIXTIME(%d))",
+                    wf.getCityId(), wf.getMaxTemp(), wf.getMinTemp(), wf.getRainSum(),
+                    wf.getSunrise(), wf.getSunset(), wf.getDay());
+            stmt.executeUpdate(insertSql);
+        }
+
     }
 
     public void logCityLocationError(CityError err, Connection con) throws SQLException {
