@@ -4,6 +4,7 @@ import com.good.boy.husky.database.configuration.DatabaseConfiguration;
 import com.good.boy.husky.database.entity.CityError;
 import com.good.boy.husky.database.entity.CityLocation;
 import com.good.boy.husky.database.entity.CitySimple;
+import com.good.boy.husky.database.entity.ForecastError;
 import com.good.boy.husky.database.entity.WeatherForecast;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -46,6 +47,12 @@ public class DatabaseService {
     public void addWeatherForecast(WeatherForecast wf) throws SQLException {
         try (Connection con = getConnection()) {
             addWeatherForecast(wf, con);
+        }
+    }
+    
+        public void addForecastError(ForecastError fe) throws SQLException {
+        try (Connection con = getConnection()) {
+            addForecastError(fe, con);
         }
     }
 
@@ -112,6 +119,17 @@ public class DatabaseService {
                     + "values (%d, %f, %f, %f, FROM_UNIXTIME(%d), FROM_UNIXTIME(%d), FROM_UNIXTIME(%d))",
                     wf.getCityId(), wf.getMaxTemp(), wf.getMinTemp(), wf.getRainSum(),
                     wf.getSunrise(), wf.getSunset(), wf.getDay());
+            stmt.executeUpdate(insertSql);
+        }
+
+    }
+    
+     public void addForecastError(ForecastError fe, Connection con) throws SQLException {
+        try (Statement stmt = con.createStatement()) {
+            String insertSql = String.format("INSERT INTO forecast_error "
+                    + "(city_id, date, error)\n "
+                    + "values (%d, FROM_UNIXTIME(%d), \"%s\")",
+                    fe.getCityId(), fe.getUnixTime(), fe.getError());
             stmt.executeUpdate(insertSql);
         }
 
