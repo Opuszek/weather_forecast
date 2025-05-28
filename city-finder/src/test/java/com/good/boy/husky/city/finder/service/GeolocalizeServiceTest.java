@@ -28,7 +28,6 @@ import org.mockito.Mockito;
 public class GeolocalizeServiceTest {
 
     private final static int CITY_ID = 1;
-    private final static String NOT_URL_ENCODED_CITY_NAME = "city city";
     private final static float LATITUDE = 50.1F;
     private final static float LONGITUDE = 50.2F;
     private final static String JSON_RESULT = "[{\"latitude\": "
@@ -49,15 +48,6 @@ public class GeolocalizeServiceTest {
     }
 
     @Test
-    public void methodReturnsInvalidatingCityErrorWhenGivenCityNameThatWasNotURLEncoded() {
-        GeolocalizeService service = new GeolocalizeService();
-        CitySimple city = testInput();
-        city.setCountry(NOT_URL_ENCODED_CITY_NAME);
-        Either<CityError, CityLocation> result = service.geolocalize(city);
-        isInvalidatingCityError(result);
-    }
-
-    @Test
     public void methodReturnsInvalidatingCityErrorWhenHttpClientReturnsMalformedJSON()
             throws IOException, InterruptedException {
         HttpResponse<String> response = mockCorrectResponse();
@@ -71,7 +61,7 @@ public class GeolocalizeServiceTest {
     @ValueSource(ints = {100, 300, 400, 404, 500, 1})
     public void methodReturnsLenientCityErrorWhenHttpClientReturnsInvalidStatusCode(int invalidStatusCode)
             throws IOException, InterruptedException {
-        HttpResponse<String> response = mockCorrectResponse();
+         HttpResponse<String> response = Mockito.mock(HttpResponse.class);
         Mockito.when(response.statusCode())
                 .thenReturn(invalidStatusCode);
         Either<CityError, CityLocation> result = runWithResponse(response);

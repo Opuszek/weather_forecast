@@ -6,8 +6,10 @@ import com.good.boy.husky.database.entity.CityLocation;
 import com.good.boy.husky.database.entity.CitySimple;
 import io.vavr.control.Either;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -43,11 +45,12 @@ public class GeolocalizeService {
     }
 
     public Either<CityError, CityLocation> geolocalize(CitySimple city) {
-        String uriString = String.format(
-                "https://api.api-ninjas.com/v1/geocoding?city=%s&country=%s",
-                city.getName(), city.getCountry()
-        );
         try {
+            String uriString = String.format(
+                    "https://api.api-ninjas.com/v1/geocoding?city=%s&country=%s",
+                    URLEncoder.encode(city.getName(), "UTF-8"),
+                    URLEncoder.encode(city.getCountry(), "UTF-8")
+            );
             URI uri = new URI(uriString);
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(uri)
@@ -77,7 +80,7 @@ public class GeolocalizeService {
                     this.invalidatingExceptions.contains(ex.getClass())));
         }
     }
-    
+
     private boolean responseIsValid(HttpResponse<String> response) {
         return response.statusCode() >= 200 && response.statusCode() < 300;
     }
