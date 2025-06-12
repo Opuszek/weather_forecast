@@ -1,8 +1,5 @@
 package com.good.boy.husky.database.entity;
 
-import java.sql.Timestamp;
-import java.util.Date;
-
 public class WeatherForecast {
 
     private int id;

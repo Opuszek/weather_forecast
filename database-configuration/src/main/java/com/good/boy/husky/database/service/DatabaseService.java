@@ -16,8 +16,22 @@ import java.util.List;
 
 public class DatabaseService {
 
+    private final String username;
+    private final String password;
+    private final String url;
+
+    public DatabaseService(String url, String username, String password) {
+        this.username = username;
+        this.password = password;
+        this.url = url;
+    }
+
     public DatabaseService() {
         DatabaseConfiguration.validateConfiguration();
+        this.url = DatabaseConfiguration.getUrl();
+        this.username = DatabaseConfiguration.getUser();
+        this.password = DatabaseConfiguration.getPassword();
+
     }
 
     public List<CitySimple> getListOfUnlocatedCities() throws SQLException {
@@ -49,8 +63,8 @@ public class DatabaseService {
             addWeatherForecast(wf, con);
         }
     }
-    
-        public void addForecastError(ForecastError fe) throws SQLException {
+
+    public void addForecastError(ForecastError fe) throws SQLException {
         try (Connection con = getConnection()) {
             addForecastError(fe, con);
         }
@@ -103,7 +117,7 @@ public class DatabaseService {
         return locations;
     }
 
-    public void updateCityLocation(CityLocation loc, Connection con) throws SQLException {
+    private void updateCityLocation(CityLocation loc, Connection con) throws SQLException {
         try (Statement stmt = con.createStatement()) {
             String updateSql = String.format("UPDATE city "
                     + "SET longitude=%f, latitude=%f, error=NULL, located=1 "
@@ -112,7 +126,7 @@ public class DatabaseService {
         }
     }
 
-    public void addWeatherForecast(WeatherForecast wf, Connection con) throws SQLException {
+    private void addWeatherForecast(WeatherForecast wf, Connection con) throws SQLException {
         try (Statement stmt = con.createStatement()) {
             String insertSql = String.format("INSERT INTO temperature_forecast "
                     + "(city_id, max_temperature, min_temperature, rain_sum, sunrise, sunset, day)\n "
@@ -121,10 +135,9 @@ public class DatabaseService {
                     wf.getSunrise(), wf.getSunset(), wf.getDay());
             stmt.executeUpdate(insertSql);
         }
-
     }
-    
-     public void addForecastError(ForecastError fe, Connection con) throws SQLException {
+
+    private void addForecastError(ForecastError fe, Connection con) throws SQLException {
         try (Statement stmt = con.createStatement()) {
             String insertSql = String.format("INSERT INTO forecast_error "
                     + "(city_id, date, error)\n "
@@ -135,7 +148,7 @@ public class DatabaseService {
 
     }
 
-    public void logCityLocationError(CityError err, Connection con) throws SQLException {
+    private void logCityLocationError(CityError err, Connection con) throws SQLException {
         try (Statement stmt = con.createStatement()) {
             String selectSql = String.format("UPDATE city "
                     + "SET error=\"%s\", invalid=%B, number_of_tries=number_of_tries+1 "
@@ -146,9 +159,7 @@ public class DatabaseService {
 
     private Connection getConnection() throws SQLException {
         return DriverManager
-                .getConnection(DatabaseConfiguration.getUrl(),
-                        DatabaseConfiguration.getUser(),
-                        DatabaseConfiguration.getPassword());
+                .getConnection(this.url, this.username, this.password);
     }
 
 }
