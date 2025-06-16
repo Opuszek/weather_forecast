@@ -151,7 +151,7 @@ public class DatabaseService {
     private void logCityLocationError(CityError err, Connection con) throws SQLException {
         try (Statement stmt = con.createStatement()) {
             String selectSql = String.format("UPDATE city "
-                    + "SET error=\"%s\", invalid=%B, number_of_tries=number_of_tries+1 "
+                    + "SET error='%s', invalid=%B, number_of_tries=number_of_tries+1 "
                     + "where id=%d", err.getError(), err.isInvalid(), err.getId());
             stmt.executeUpdate(selectSql);
         }
