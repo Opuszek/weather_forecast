@@ -1,0 +1,18 @@
+What is it?
+
+A hobby program of mine to localize cities and save weather informations about them.
+
+How it works?
+
+A name of a city and its country is saved by an user in a table `city` in the database `weather_observer`. When run, city-finder connects to a service api-ninjas and saves the place's longitute and latitude. Weather-finder saves the weather data for today's day when run subsequently, using for it api.open-meteo.com. 
+
+What do I need to run it?
+
+- A database with a scheme contained within build/database_scheme.sql.
+- A working api key for api-ninjas added to city-finder/src/main/resources/application.properties 
+
+Anything else?
+
+The program has been intended to work as a scheduled service and can be implemented as such with systemctl files in ./build/systemctl.
+
+
