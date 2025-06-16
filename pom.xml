@@ -12,7 +12,7 @@
         <exec.mainClass>com.good.boy.husky.weather.forecast.WeatherForecast</exec.mainClass>
     </properties>
     <modules>
-        <module>database-configuration</module>
+        <module>database-service</module>
         <module>city-finder</module>
         <module>weather-finder</module>
     </modules>

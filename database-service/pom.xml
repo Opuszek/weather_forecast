@@ -6,7 +6,7 @@
         <artifactId>weather-forecast</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>database-configuration</artifactId>
+    <artifactId>database-service</artifactId>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
@@ -48,4 +48,5 @@
             </plugin>
         </plugins>
     </build>
+    <name>database-service</name>
 </project>
