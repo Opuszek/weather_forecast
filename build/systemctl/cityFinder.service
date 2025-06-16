@@ -1,0 +1,8 @@
+[Unit]
+Description="Geolocize cities and saves results in the database"
+Requires=mysql.service
+After=mysql.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/java -jar /usr/local/bin/cityFinder.jar

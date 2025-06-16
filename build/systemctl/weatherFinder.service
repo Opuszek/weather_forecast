@@ -1,0 +1,10 @@
+[Unit]
+Description="saves today's weather for cities located in the database"
+Wants=cityFinder.service
+Requires=mysql.service
+After=mysql.service
+After=cityFinder.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/java -jar /usr/local/bin/weatherFinder.jar

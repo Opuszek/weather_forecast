@@ -1,0 +1,11 @@
+[Unit]
+Description="A timer for service that saves weather forecast in a database"
+
+[Timer]
+OnCalendar=*-*-* 08:00:00
+Persistent=true
+Unit=weatherFinder.service
+
+
+[Install]
+WantedBy=multi-user.target
