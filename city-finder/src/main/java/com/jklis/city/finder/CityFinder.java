@@ -7,6 +7,7 @@ import com.jklis.database.entity.CitySimple;
 import com.jklis.database.service.DatabaseService;
 import io.vavr.control.Either;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,13 +22,22 @@ public class CityFinder {
         List<Either<CityError, CityLocation>> results = unlocatedCities.stream()
                 .map(geolocalizeService::geolocalize)
                 .collect(Collectors.toList());
-        for (var result : results) {
-            if (result.isRight()) {
-                databaseService.updateCityLocation(result.get());
-            } else {
-                databaseService.logCityLocationError(result.getLeft());
-            }
-        }
+        databaseService.updateCityLocation(getRightEithers(results));
+        databaseService.logCityLocationError(getLeftEithers(results));
+    }
+
+    private static <T, Y> List<T> getLeftEithers(Collection<Either<T, Y>> eithers) {
+        return eithers.stream()
+                .filter(Either::isLeft)
+                .map(Either::getLeft)
+                .collect(Collectors.toList());
+    }
+
+    private static <T, Y> List<Y> getRightEithers(Collection<Either<T, Y>> eithers) {
+        return eithers.stream()
+                .filter(Either::isRight)
+                .map(Either::get)
+                .collect(Collectors.toList());
     }
 
 }

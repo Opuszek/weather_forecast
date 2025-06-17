@@ -1,6 +1,5 @@
 package com.jklis.database.service;
 
-import com.jklis.database.service.DatabaseService;
 import com.jklis.database.entity.CityError;
 import com.jklis.database.entity.CityLocation;
 import com.jklis.database.entity.CitySimple;
@@ -11,7 +10,10 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.ClassRule;
 import org.junit.jupiter.api.AfterEach;
@@ -108,35 +110,32 @@ public class DatabaseServiceTest {
 
     @Test
     public void updateCityLocationUpdatesCityLocation() throws SQLException {
-        int id = updateLocation(LOCATED_CITY_NAME);
-        assertThat(service.getListOfCityLocations(),
-                hasItem(
-                        allOf(
-                                hasProperty("id", is(id)),
-                                hasProperty("longitude", is(UPD_C_LONG)),
-                                hasProperty("latitude", equalTo(UPD_C_LATI))
-                        )
-                )
-        );
+        updateLocations(LOCATED_CITY_NAME);
+        assertUpdatedLocation(getCityId(LOCATED_CITY_NAME), service.getListOfCityLocations());
+
     }
 
     @Test
     public void updateCityLocationSetsLocatedToTrue() throws SQLException {
-        int id = updateLocation(UNLOCATED_CITY_NAME);
-        assertThat(service.getListOfLocatedCities(),
-                hasItem(
-                        hasProperty("id", is(id))
-                )
-        );
+        updateLocations(UNLOCATED_CITY_NAME);
+        assertLocatedIsTrue(getCityId(UNLOCATED_CITY_NAME), service.getListOfCityLocations());
     }
 
     @Test
     public void updateCityLocationRemovesErrorMessage() throws SQLException {
         assertThat(getErrorMessage(UNLOC_CITY_WITH_ERROR_MESSAGE_NAME),
                 is(not(emptyOrNullString())));
-        updateLocation(UNLOC_CITY_WITH_ERROR_MESSAGE_NAME);
-        assertThat(getErrorMessage(UNLOC_CITY_WITH_ERROR_MESSAGE_NAME),
-                is(emptyOrNullString()));
+        updateLocations(UNLOC_CITY_WITH_ERROR_MESSAGE_NAME);
+        assertErrorMessageIsEmptyOrNull(UNLOC_CITY_WITH_ERROR_MESSAGE_NAME);
+    }
+
+    @Test
+    public void updatesCityLocationInABatch() throws SQLException {
+        updateLocations(LOCATED_CITY_NAME, UNLOCATED_CITY_NAME, 
+                UNLOC_CITY_WITH_ERROR_MESSAGE_NAME);
+        assertUpdatedLocation(getCityId(LOCATED_CITY_NAME), service.getListOfCityLocations());
+        assertLocatedIsTrue(getCityId(UNLOCATED_CITY_NAME), service.getListOfCityLocations());
+        assertErrorMessageIsEmptyOrNull(UNLOC_CITY_WITH_ERROR_MESSAGE_NAME);
     }
 
     @Test
@@ -175,7 +174,9 @@ public class DatabaseServiceTest {
     public void loggingCityConnectionErrorIncreasesNumberOfTries() throws SQLException {
         int numberOfTriesBefore = getNumberOfTries(LOCATED_CITY_NAME);
         int cityId = getCityId(LOCATED_CITY_NAME);
-        service.logCityLocationError(new CityError(cityId, ERROR_MESSAGE, false));
+        service.logCityLocationError(Arrays.asList(
+                new CityError(cityId, ERROR_MESSAGE, false))
+        );
         assertThat(
                 getNumberOfTries(LOCATED_CITY_NAME),
                 equalTo(numberOfTriesBefore + 1)
@@ -185,11 +186,39 @@ public class DatabaseServiceTest {
     @Test
     public void loggingCityConnectionErrorWithInvalidTrueMakesCityInvalid() throws SQLException {
         int cityId = getCityId(LOCATED_CITY_NAME);
-        service.logCityLocationError(new CityError(cityId, ERROR_MESSAGE, true));
+        int cityId_2 = getCityId(UNLOCATED_CITY_NAME);
+        service.logCityLocationError(
+                Arrays.asList(new CityError(cityId, ERROR_MESSAGE, true))
+        );
         assertThat(
                 isInvalid(LOCATED_CITY_NAME),
                 is(true)
         );
+    }
+
+    private void assertUpdatedLocation(int cityId, List<CityLocation> locations) {
+        assertThat(locations,
+                hasItem(
+                        allOf(
+                                hasProperty("id", is(cityId)),
+                                hasProperty("longitude", is(UPD_C_LONG)),
+                                hasProperty("latitude", equalTo(UPD_C_LATI))
+                        )
+                )
+        );
+    }
+
+    private void assertLocatedIsTrue(int cityId, List<CityLocation> locations) {
+        assertThat(locations,
+                hasItem(
+                        hasProperty("id", is(cityId))
+                )
+        );
+    }
+
+    private void assertErrorMessageIsEmptyOrNull(String cityName) throws SQLException {
+        assertThat(getErrorMessage(cityName),
+                is(emptyOrNullString()));
     }
 
     private static void createTestValues() throws SQLException {
@@ -215,14 +244,19 @@ public class DatabaseServiceTest {
                 .findAny().get().getId();
     }
 
-    private int updateLocation(String cityName) throws SQLException {
-        int id = getCityId(cityName);
-        service.updateCityLocation(
-                new CityLocation.CityLocationBuilder()
-                        .id(id).latitude(UPD_C_LATI).longitude(UPD_C_LONG)
-                        .build()
-        );
-        return id;
+
+    private void updateLocations(String... cityNames) throws SQLException {
+        List<Integer>ids = new ArrayList<>();
+        for (var cityName : cityNames) {
+            ids.add(getCityId(cityName));
+        }
+        List<CityLocation> cls = ids.stream()
+                .map(cl -> 
+                        new CityLocation.CityLocationBuilder()
+                                .id(cl).latitude(UPD_C_LATI).longitude(UPD_C_LONG)
+                                .build()
+                ).collect(Collectors.toList());
+        service.updateCityLocation(cls);
     }
 
     private String getErrorMessage(String cityName) throws SQLException {

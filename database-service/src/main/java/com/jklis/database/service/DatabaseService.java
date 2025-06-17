@@ -12,7 +12,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DatabaseService {
 
@@ -52,7 +54,7 @@ public class DatabaseService {
         }
     }
 
-    public void updateCityLocation(CityLocation location) throws SQLException {
+    public void updateCityLocation(Collection<CityLocation> location) throws SQLException {
         try (Connection con = getConnection()) {
             updateCityLocation(location, con);
         }
@@ -70,9 +72,9 @@ public class DatabaseService {
         }
     }
 
-    public void logCityLocationError(CityError error) throws SQLException {
+    public void logCityLocationError(Collection<CityError> errs) throws SQLException {
         try (Connection con = getConnection()) {
-            logCityLocationError(error, con);
+            logCityLocationError(errs, con);
         }
     }
 
@@ -117,13 +119,21 @@ public class DatabaseService {
         return locations;
     }
 
-    private void updateCityLocation(CityLocation loc, Connection con) throws SQLException {
+    private void updateCityLocation(Collection<CityLocation> locs, Connection con) throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            String updateSql = String.format("UPDATE city "
-                    + "SET longitude=%f, latitude=%f, error=NULL, located=1 "
-                    + "where id=%d", loc.getLongitude(), loc.getLatitude(), loc.getId());
-            stmt.executeUpdate(updateSql);
+            List<String> queries = locs.stream().map(this::getUpdateCityLocationStmt)
+                    .collect(Collectors.toList());
+            for (String query : queries) {
+                stmt.addBatch(query);
+            }
+            stmt.executeBatch();
         }
+    }
+
+    private String getUpdateCityLocationStmt(CityLocation loc) {
+        return String.format("UPDATE city "
+                + "SET longitude=%f, latitude=%f, error=NULL, located=1 "
+                + "where id=%d", loc.getLongitude(), loc.getLatitude(), loc.getId());
     }
 
     private void addWeatherForecast(WeatherForecast wf, Connection con) throws SQLException {
@@ -148,13 +158,21 @@ public class DatabaseService {
 
     }
 
-    private void logCityLocationError(CityError err, Connection con) throws SQLException {
+    private void logCityLocationError(Collection<CityError> errs, Connection con) throws SQLException {
         try (Statement stmt = con.createStatement()) {
-            String selectSql = String.format("UPDATE city "
-                    + "SET error='%s', invalid=%B, number_of_tries=number_of_tries+1 "
-                    + "where id=%d", err.getError(), err.isInvalid(), err.getId());
-            stmt.executeUpdate(selectSql);
+            List<String> queries = errs.stream().map(this::getUpdateCityLocationErrorStmt)
+                    .collect(Collectors.toList());
+            for (String query : queries) {
+                stmt.addBatch(query);
+            }
+            stmt.executeBatch();
         }
+    }
+
+    private String getUpdateCityLocationErrorStmt(CityError err) {
+        return String.format("UPDATE city "
+                + "SET error='%s', invalid=%B, number_of_tries=number_of_tries+1 "
+                + "where id=%d", err.getError(), err.isInvalid(), err.getId());
     }
 
     private Connection getConnection() throws SQLException {
