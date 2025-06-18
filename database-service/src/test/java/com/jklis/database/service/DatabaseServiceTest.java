@@ -172,26 +172,44 @@ public class DatabaseServiceTest {
 
     @Test
     public void loggingCityConnectionErrorIncreasesNumberOfTries() throws SQLException {
-        int numberOfTriesBefore = getNumberOfTries(LOCATED_CITY_NAME);
-        int cityId = getCityId(LOCATED_CITY_NAME);
+        int numberOfTriesBefore = getNumberOfTries(UNLOCATED_CITY_NAME);
+        int cityId = getCityId(UNLOCATED_CITY_NAME);
         service.logCityLocationError(Arrays.asList(
                 new CityError(cityId, ERROR_MESSAGE, false))
         );
         assertThat(
-                getNumberOfTries(LOCATED_CITY_NAME),
+                getNumberOfTries(UNLOCATED_CITY_NAME),
                 equalTo(numberOfTriesBefore + 1)
         );
     }
 
     @Test
     public void loggingCityConnectionErrorWithInvalidTrueMakesCityInvalid() throws SQLException {
-        int cityId = getCityId(LOCATED_CITY_NAME);
-        int cityId_2 = getCityId(UNLOCATED_CITY_NAME);
+        int cityId = getCityId(UNLOCATED_CITY_NAME);
         service.logCityLocationError(
                 Arrays.asList(new CityError(cityId, ERROR_MESSAGE, true))
         );
         assertThat(
-                isInvalid(LOCATED_CITY_NAME),
+                isInvalid(UNLOCATED_CITY_NAME),
+                is(true)
+        );
+    }
+
+    @Test
+    public void loggingCityConnectionInABatch() throws SQLException {
+        int numberOfTriesBefore = getNumberOfTries(UNLOCATED_CITY_NAME);
+        int cityId = getCityId(UNLOCATED_CITY_NAME);
+        int invalidatedCityName = getCityId(UNLOC_CITY_WITH_ERROR_MESSAGE_NAME);
+        service.logCityLocationError(
+                Arrays.asList(new CityError(cityId, ERROR_MESSAGE, false),
+                        new CityError(invalidatedCityName, ERROR_MESSAGE, true))
+        );
+        assertThat(
+                getNumberOfTries(UNLOCATED_CITY_NAME),
+                equalTo(numberOfTriesBefore + 1)
+        );
+        assertThat(
+                isInvalid(UNLOC_CITY_WITH_ERROR_MESSAGE_NAME),
                 is(true)
         );
     }
