@@ -35,7 +35,7 @@ public class WeatherService {
         this.client = client;
     }
 
-    public Either<ForecastError,WeatherForecast> getWeatherDetails(CityLocation location) {
+    public Either<ForecastError,WeatherForecast> getWeatherForecast(CityLocation location) {
         try {
         return Either.right(getWeatherDetailsPriv(location));
         } catch (Exception ex) {

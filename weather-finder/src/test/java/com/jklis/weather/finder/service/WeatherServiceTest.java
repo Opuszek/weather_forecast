@@ -45,7 +45,7 @@ public class WeatherServiceTest {
         Mockito.when(clientMock.send(any(HttpRequest.class), any()))
                 .thenThrow(e);
         WeatherService service = new WeatherService(clientMock);
-        Either<ForecastError, WeatherForecast> result = service.getWeatherDetails(testInput());
+        Either<ForecastError, WeatherForecast> result = service.getWeatherForecast(testInput());
         Assertions.assertTrue(result.isLeft());
         ForecastError error = result.getLeft();
         assertThat(error.getCityId(), equalTo(CITY_ID));
@@ -86,7 +86,7 @@ public class WeatherServiceTest {
                 Mockito.<HttpResponse.BodyHandler<String>>any()))
                 .thenReturn(response);
         WeatherService service = new WeatherService(clientMock);
-        return service.getWeatherDetails(testInput());
+        return service.getWeatherForecast(testInput());
     }
 
     private HttpResponse<String> mockCorrectResponse() {

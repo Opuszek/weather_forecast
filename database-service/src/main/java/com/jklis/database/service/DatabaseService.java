@@ -55,23 +55,19 @@ public class DatabaseService {
         }
     }
 
-    public void updateCityLocation(Collection<CityLocation> locs) throws SQLException {
+    public void updateCityLocations(Collection<CityLocation> locs) throws SQLException {
         executeBatchUpdate(locs, this::getUpdateCityLocationStmt);
     }
 
-    public void addWeatherForecast(WeatherForecast wf) throws SQLException {
-        try (Connection con = getConnection()) {
-            addWeatherForecast(wf, con);
-        }
+    public void addWeatherForecasts(Collection<WeatherForecast> wfs) throws SQLException {
+        executeBatchUpdate(wfs, this::createAddWeatherForecastStatement);
     }
 
-    public void addForecastError(ForecastError fe) throws SQLException {
-        try (Connection con = getConnection()) {
-            addForecastError(fe, con);
-        }
+    public void addForecastErrors(Collection<ForecastError> fes) throws SQLException {
+        executeBatchUpdate(fes, this::createAddForecastErrorStatement);
     }
 
-    public void logCityLocationError(Collection<CityError> errs) throws SQLException {
+    public void logCityLocationErrors(Collection<CityError> errs) throws SQLException {
         executeBatchUpdate(errs, this::getUpdateCityLocationErrorStmt);
     }
 
@@ -121,27 +117,20 @@ public class DatabaseService {
                 + "SET longitude=%f, latitude=%f, error=NULL, located=1 "
                 + "where id=%d", loc.getLongitude(), loc.getLatitude(), loc.getId());
     }
-
-    private void addWeatherForecast(WeatherForecast wf, Connection con) throws SQLException {
-        try (Statement stmt = con.createStatement()) {
-            String insertSql = String.format("INSERT INTO temperature_forecast "
-                    + "(city_id, max_temperature, min_temperature, rain_sum, sunrise, sunset, day)\n "
-                    + "values (%d, %f, %f, %f, FROM_UNIXTIME(%d), FROM_UNIXTIME(%d), FROM_UNIXTIME(%d))",
-                    wf.getCityId(), wf.getMaxTemp(), wf.getMinTemp(), wf.getRainSum(),
-                    wf.getSunrise(), wf.getSunset(), wf.getDay());
-            stmt.executeUpdate(insertSql);
-        }
+    
+    private String createAddWeatherForecastStatement(WeatherForecast wf) {
+        return String.format("INSERT INTO temperature_forecast "
+                + "(city_id, max_temperature, min_temperature, rain_sum, sunrise, sunset, day)\n "
+                + "values (%d, %f, %f, %f, FROM_UNIXTIME(%d), FROM_UNIXTIME(%d), FROM_UNIXTIME(%d))",
+                wf.getCityId(), wf.getMaxTemp(), wf.getMinTemp(), wf.getRainSum(),
+                wf.getSunrise(), wf.getSunset(), wf.getDay());
     }
-
-    private void addForecastError(ForecastError fe, Connection con) throws SQLException {
-        try (Statement stmt = con.createStatement()) {
-            String insertSql = String.format("INSERT INTO forecast_error "
-                    + "(city_id, date, error)\n "
-                    + "values (%d, FROM_UNIXTIME(%d), \"%s\")",
-                    fe.getCityId(), fe.getUnixTime(), fe.getError());
-            stmt.executeUpdate(insertSql);
-        }
-
+    
+    private String createAddForecastErrorStatement(ForecastError fe) {
+        return String.format("INSERT INTO forecast_error "
+                + "(city_id, date, error)\n "
+                + "values (%d, FROM_UNIXTIME(%d), \"%s\")",
+                fe.getCityId(), fe.getUnixTime(), fe.getError());
     }
 
     private String getUpdateCityLocationErrorStmt(CityError err) {

@@ -22,8 +22,8 @@ public class CityFinder {
         List<Either<CityError, CityLocation>> results = unlocatedCities.stream()
                 .map(geolocalizeService::geolocalize)
                 .collect(Collectors.toList());
-        databaseService.updateCityLocation(getRightEithers(results));
-        databaseService.logCityLocationError(getLeftEithers(results));
+        databaseService.updateCityLocations(getRightEithers(results));
+        databaseService.logCityLocationErrors(getLeftEithers(results));
     }
 
     private static <T, Y> List<T> getLeftEithers(Collection<Either<T, Y>> eithers) {

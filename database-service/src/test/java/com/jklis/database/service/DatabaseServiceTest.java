@@ -49,6 +49,7 @@ public class DatabaseServiceTest {
     private static final long SUNRISE = 1749734752l;
     private static final long SUNSET = 1749734753l;
     private static final long DAY = 1749734754l;
+    private static final long DAY_2 = 1749794754l;
     private static final long ERROR_DATE = 1749734755l;
     private static final String ERROR_MESSAGE = "error_message";
     private static final String ERROR_PARAM_NAME = "error";
@@ -150,23 +151,44 @@ public class DatabaseServiceTest {
                 .sunset(SUNSET)
                 .day(DAY)
                 .build();
-        service.addWeatherForecast(wf);
+        var wf2 = new WeatherForecast.WeatherForecastBuilder()
+                .cityId(cityId)
+                .maxTemp(MAX_TEMP)
+                .minTemp(MIN_TEMP)
+                .rainSum(RAIN_SUM)
+                .sunrise(SUNRISE)
+                .sunset(SUNSET)
+                .day(DAY_2)
+                .build();
+        service.addWeatherForecasts(Arrays.asList(wf, wf2));
         assertThat(
                 weatherForecastExists(cityId, MAX_TEMP, MIN_TEMP,
                         RAIN_SUM, SUNRISE, SUNSET, DAY),
+                is(true));
+        assertThat(
+                weatherForecastExists(cityId, MAX_TEMP, MIN_TEMP,
+                        RAIN_SUM, SUNRISE, SUNSET, DAY_2),
                 is(true));
     }
 
     @Test
     public void addForecastErrorSavesForecastError() throws SQLException {
         int cityId = getCityId(LOCATED_CITY_NAME);
+        int cityId2 = getCityId(UNLOCATED_CITY_NAME);
         var fe = new ForecastError()
                 .setCityId(cityId)
                 .setError(ERROR_MESSAGE)
                 .setUnixTime(ERROR_DATE);
-        service.addForecastError(fe);
+        var fe2 = new ForecastError()
+                .setCityId(cityId2)
+                .setError(ERROR_MESSAGE)
+                .setUnixTime(ERROR_DATE);
+        service.addForecastErrors(Arrays.asList(fe, fe2));
         assertThat(
                 forecastErrorExist(cityId, ERROR_MESSAGE, ERROR_DATE),
+                is(true));
+        assertThat(
+                forecastErrorExist(cityId2, ERROR_MESSAGE, ERROR_DATE),
                 is(true));
     }
 
@@ -174,7 +196,7 @@ public class DatabaseServiceTest {
     public void loggingCityConnectionErrorIncreasesNumberOfTries() throws SQLException {
         int numberOfTriesBefore = getNumberOfTries(UNLOCATED_CITY_NAME);
         int cityId = getCityId(UNLOCATED_CITY_NAME);
-        service.logCityLocationError(Arrays.asList(
+        service.logCityLocationErrors(Arrays.asList(
                 new CityError(cityId, ERROR_MESSAGE, false))
         );
         assertThat(
@@ -186,7 +208,7 @@ public class DatabaseServiceTest {
     @Test
     public void loggingCityConnectionErrorWithInvalidTrueMakesCityInvalid() throws SQLException {
         int cityId = getCityId(UNLOCATED_CITY_NAME);
-        service.logCityLocationError(
+        service.logCityLocationErrors(
                 Arrays.asList(new CityError(cityId, ERROR_MESSAGE, true))
         );
         assertThat(
@@ -200,7 +222,7 @@ public class DatabaseServiceTest {
         int numberOfTriesBefore = getNumberOfTries(UNLOCATED_CITY_NAME);
         int cityId = getCityId(UNLOCATED_CITY_NAME);
         int invalidatedCityName = getCityId(UNLOC_CITY_WITH_ERROR_MESSAGE_NAME);
-        service.logCityLocationError(
+        service.logCityLocationErrors(
                 Arrays.asList(new CityError(cityId, ERROR_MESSAGE, false),
                         new CityError(invalidatedCityName, ERROR_MESSAGE, true))
         );
@@ -274,7 +296,7 @@ public class DatabaseServiceTest {
                                 .id(cl).latitude(UPD_C_LATI).longitude(UPD_C_LONG)
                                 .build()
                 ).collect(Collectors.toList());
-        service.updateCityLocation(cls);
+        service.updateCityLocations(cls);
     }
 
     private String getErrorMessage(String cityName) throws SQLException {
