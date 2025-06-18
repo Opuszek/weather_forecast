@@ -14,6 +14,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DatabaseService {
@@ -54,10 +55,8 @@ public class DatabaseService {
         }
     }
 
-    public void updateCityLocation(Collection<CityLocation> location) throws SQLException {
-        try (Connection con = getConnection()) {
-            updateCityLocation(location, con);
-        }
+    public void updateCityLocation(Collection<CityLocation> locs) throws SQLException {
+        executeBatchUpdate(locs, this::getUpdateCityLocationStmt);
     }
 
     public void addWeatherForecast(WeatherForecast wf) throws SQLException {
@@ -73,9 +72,7 @@ public class DatabaseService {
     }
 
     public void logCityLocationError(Collection<CityError> errs) throws SQLException {
-        try (Connection con = getConnection()) {
-            logCityLocationError(errs, con);
-        }
+        executeBatchUpdate(errs, this::getUpdateCityLocationErrorStmt);
     }
 
     private List<CitySimple> getListOfCities(Connection con,
@@ -119,17 +116,6 @@ public class DatabaseService {
         return locations;
     }
 
-    private void updateCityLocation(Collection<CityLocation> locs, Connection con) throws SQLException {
-        try (Statement stmt = con.createStatement()) {
-            List<String> queries = locs.stream().map(this::getUpdateCityLocationStmt)
-                    .collect(Collectors.toList());
-            for (String query : queries) {
-                stmt.addBatch(query);
-            }
-            stmt.executeBatch();
-        }
-    }
-
     private String getUpdateCityLocationStmt(CityLocation loc) {
         return String.format("UPDATE city "
                 + "SET longitude=%f, latitude=%f, error=NULL, located=1 "
@@ -158,17 +144,6 @@ public class DatabaseService {
 
     }
 
-    private void logCityLocationError(Collection<CityError> errs, Connection con) throws SQLException {
-        try (Statement stmt = con.createStatement()) {
-            List<String> queries = errs.stream().map(this::getUpdateCityLocationErrorStmt)
-                    .collect(Collectors.toList());
-            for (String query : queries) {
-                stmt.addBatch(query);
-            }
-            stmt.executeBatch();
-        }
-    }
-
     private String getUpdateCityLocationErrorStmt(CityError err) {
         return String.format("UPDATE city "
                 + "SET error='%s', invalid=%B, number_of_tries=number_of_tries+1 "
@@ -178,6 +153,19 @@ public class DatabaseService {
     private Connection getConnection() throws SQLException {
         return DriverManager
                 .getConnection(this.url, this.username, this.password);
+    }
+    
+    private <T> void executeBatchUpdate(Collection<T> entities, Function<T, String> createStmt) throws SQLException {
+        try (Connection con = getConnection()) {
+            try (Statement stmt = con.createStatement()) {
+                List<String> queries = entities.stream().map(createStmt)
+                        .collect(Collectors.toList());
+                for (String query : queries) {
+                    stmt.addBatch(query);
+                }
+                stmt.executeBatch();
+            }
+        }
     }
 
 }
