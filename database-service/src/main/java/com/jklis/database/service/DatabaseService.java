@@ -8,6 +8,7 @@ import com.jklis.database.entity.ForecastError;
 import com.jklis.database.entity.WeatherForecast;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -22,6 +23,30 @@ public class DatabaseService {
     private final String username;
     private final String password;
     private final String url;
+
+    private final String UPD_CT_LOC_STMT = "UPDATE city "
+            + "SET longitude=?, latitude=?, error=NULL, located=1 "
+            + "where id=?";
+
+    private final String CRT_WTH_FCT_STMT = "INSERT INTO temperature_forecast "
+            + "(city_id, max_temperature, min_temperature, rain_sum, sunrise, sunset, day)\n "
+            + "values (?, ?, ?, ?, FROM_UNIXTIME(?), FROM_UNIXTIME(?), FROM_UNIXTIME(?))";
+
+    private final String CRT_WTH_FCT_ERR_STMT = "INSERT INTO forecast_error "
+            + "(city_id, date, error)\n "
+            + "values (?, FROM_UNIXTIME(?), ?)";
+
+    private final String UPD_CT_LOC__ERR_STMT = "UPDATE city "
+            + "SET error=?, invalid=?, number_of_tries=number_of_tries+1 "
+            + "where id=?";
+
+    private final String GT_CT_STMT = "SELECT id,name,country "
+            + "FROM city "
+            + "where located=? and invalid=?";
+
+    private final String GT_LOC_STMT = "SELECT id,longitude,latitude "
+            + "FROM city "
+            + "where located=1 and invalid=0";
 
     public DatabaseService(String url, String username, String password) {
         this.username = username;
@@ -55,32 +80,74 @@ public class DatabaseService {
         }
     }
 
-    public void updateCityLocations(Collection<CityLocation> locs) throws SQLException {
-        executeBatchUpdate(locs, this::getUpdateCityLocationStmt);
+    public void updateCityLocations(Collection<CityLocation> cls) throws SQLException {
+        try (Connection con = getConnection()) {
+            try (PreparedStatement stmt = con.prepareStatement(UPD_CT_LOC_STMT)) {
+                for (var cl : cls) {
+                    stmt.setFloat(1, cl.getLongitude());
+                    stmt.setFloat(2, cl.getLatitude());
+                    stmt.setInt(3, cl.getId());
+                    stmt.addBatch();
+                }
+                stmt.executeBatch();
+            }
+        }
     }
 
     public void addWeatherForecasts(Collection<WeatherForecast> wfs) throws SQLException {
-        executeBatchUpdate(wfs, this::createAddWeatherForecastStatement);
+        try (Connection con = getConnection()) {
+            try (PreparedStatement stmt = con.prepareStatement(CRT_WTH_FCT_STMT)) {
+                for (var wf : wfs) {
+                    stmt.setInt(1, wf.getCityId());
+                    stmt.setFloat(2, wf.getMaxTemp());
+                    stmt.setFloat(3, wf.getMinTemp());
+                    stmt.setFloat(4, wf.getRainSum());
+                    stmt.setLong(5, wf.getSunrise());
+                    stmt.setLong(6, wf.getSunset());
+                    stmt.setLong(7, wf.getDay());
+                    stmt.addBatch();
+                }
+                stmt.executeBatch();
+            }
+        }
     }
 
     public void addForecastErrors(Collection<ForecastError> fes) throws SQLException {
-        executeBatchUpdate(fes, this::createAddForecastErrorStatement);
+        try (Connection con = getConnection()) {
+            try (PreparedStatement stmt = con.prepareStatement(CRT_WTH_FCT_ERR_STMT)) {
+                for (var fe : fes) {
+                    stmt.setInt(1, fe.getCityId());
+                    stmt.setLong(2, fe.getUnixTime());
+                    stmt.setString(3, fe.getError());
+                    stmt.addBatch();
+                }
+                stmt.executeBatch();
+            }
+        }
     }
 
     public void logCityLocationErrors(Collection<CityError> errs) throws SQLException {
-        executeBatchUpdate(errs, this::getUpdateCityLocationErrorStmt);
+        try (Connection con = getConnection()) {
+            try (PreparedStatement stmt = con.prepareStatement(UPD_CT_LOC__ERR_STMT)) {
+                for (var err : errs) {
+                    stmt.setString(1, err.getError());
+                    stmt.setBoolean(2, err.isInvalid());
+                    stmt.setInt(3, err.getId());
+                    stmt.addBatch();
+                }
+                stmt.executeBatch();
+            }
+        }
     }
 
     private List<CitySimple> getListOfCities(Connection con,
             boolean located, boolean invalid)
             throws SQLException {
         List<CitySimple> cities = new ArrayList<>();
-        try (Statement stmt = con.createStatement()) {
-            String selectSql = String.format("SELECT id,name,country "
-                    + "FROM city "
-                    + "where located=%d and invalid=%d", located ? 1 : 0,
-                    invalid ? 1 : 0);
-            try (ResultSet resultSet = stmt.executeQuery(selectSql)) {
+        try (PreparedStatement stmt = con.prepareStatement(GT_CT_STMT)) {
+            stmt.setBoolean(1, located);
+            stmt.setBoolean(2, invalid);
+            try (ResultSet resultSet = stmt.executeQuery()) {
                 while (resultSet.next()) {
                     CitySimple city = new CitySimple();
                     city.setId(resultSet.getInt("id"));
@@ -96,10 +163,7 @@ public class DatabaseService {
     private List<CityLocation> getListOfCityLocations(Connection con) throws SQLException {
         List<CityLocation> locations = new ArrayList<>();
         try (Statement stmt = con.createStatement()) {
-            String selectSql = "SELECT id,longitude,latitude "
-                    + "FROM city "
-                    + "where located=1 and invalid=0";
-            try (ResultSet resultSet = stmt.executeQuery(selectSql)) {
+            try (ResultSet resultSet = stmt.executeQuery(GT_LOC_STMT)) {
                 while (resultSet.next()) {
                     CityLocation city = new CityLocation.CityLocationBuilder()
                             .id(resultSet.getInt("id"))
@@ -112,49 +176,9 @@ public class DatabaseService {
         return locations;
     }
 
-    private String getUpdateCityLocationStmt(CityLocation loc) {
-        return String.format("UPDATE city "
-                + "SET longitude=%f, latitude=%f, error=NULL, located=1 "
-                + "where id=%d", loc.getLongitude(), loc.getLatitude(), loc.getId());
-    }
-    
-    private String createAddWeatherForecastStatement(WeatherForecast wf) {
-        return String.format("INSERT INTO temperature_forecast "
-                + "(city_id, max_temperature, min_temperature, rain_sum, sunrise, sunset, day)\n "
-                + "values (%d, %f, %f, %f, FROM_UNIXTIME(%d), FROM_UNIXTIME(%d), FROM_UNIXTIME(%d))",
-                wf.getCityId(), wf.getMaxTemp(), wf.getMinTemp(), wf.getRainSum(),
-                wf.getSunrise(), wf.getSunset(), wf.getDay());
-    }
-    
-    private String createAddForecastErrorStatement(ForecastError fe) {
-        return String.format("INSERT INTO forecast_error "
-                + "(city_id, date, error)\n "
-                + "values (%d, FROM_UNIXTIME(%d), \"%s\")",
-                fe.getCityId(), fe.getUnixTime(), fe.getError());
-    }
-
-    private String getUpdateCityLocationErrorStmt(CityError err) {
-        return String.format("UPDATE city "
-                + "SET error='%s', invalid=%B, number_of_tries=number_of_tries+1 "
-                + "where id=%d", err.getError(), err.isInvalid(), err.getId());
-    }
-
     private Connection getConnection() throws SQLException {
         return DriverManager
                 .getConnection(this.url, this.username, this.password);
-    }
-    
-    private <T> void executeBatchUpdate(Collection<T> entities, Function<T, String> createStmt) throws SQLException {
-        try (Connection con = getConnection()) {
-            try (Statement stmt = con.createStatement()) {
-                List<String> queries = entities.stream().map(createStmt)
-                        .collect(Collectors.toList());
-                for (String query : queries) {
-                    stmt.addBatch(query);
-                }
-                stmt.executeBatch();
-            }
-        }
     }
 
 }
