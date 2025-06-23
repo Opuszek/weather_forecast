@@ -4,7 +4,7 @@ import com.jklis.database.utilities.Utilities;
 import com.jklis.database.entity.CityError;
 import com.jklis.database.entity.CityLocation;
 import com.jklis.database.entity.CitySimple;
-import io.vavr.control.Either;
+import com.jklis.utilities.Either;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -66,15 +66,15 @@ public class GeolocalizeService {
                         .id(city.getId())
                         .latitude(resultJson.getFloat("latitude"))
                         .longitude(resultJson.getFloat("longitude")).build();
-                return Either.right(cityLocation);
+                return Either.withRight(cityLocation);
             } else {
-                return Either.left(new CityError(city.getId(),
+                return Either.withLeft(new CityError(city.getId(),
                         String.format("Request failed with statusCode %s and responseBody %s",
                                 response.statusCode(), response.body()), false));
             }
         } catch (IOException | InterruptedException | URISyntaxException
                 | JSONException ex) {
-            return Either.left(new CityError(city.getId(),
+            return Either.withLeft(new CityError(city.getId(),
                     ex.getClass().getName(),
                     this.invalidatingExceptions.contains(ex.getClass())));
         }

@@ -1,10 +1,9 @@
 package com.jklis.weather.finder.service;
 
-import com.jklis.weather.finder.service.WeatherService;
 import com.jklis.database.entity.CityLocation;
 import com.jklis.database.entity.ForecastError;
 import com.jklis.database.entity.WeatherForecast;
-import io.vavr.control.Either;
+import com.jklis.utilities.Either;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -47,7 +46,7 @@ public class WeatherServiceTest {
         WeatherService service = new WeatherService(clientMock);
         Either<ForecastError, WeatherForecast> result = service.getWeatherForecast(testInput());
         Assertions.assertTrue(result.isLeft());
-        ForecastError error = result.getLeft();
+        ForecastError error = result.left();
         assertThat(error.getCityId(), equalTo(CITY_ID));
     }
 
@@ -60,7 +59,7 @@ public class WeatherServiceTest {
                 .thenReturn(invalidStatusCode);
         Either<ForecastError, WeatherForecast> result = runWithResponse(response);
         Assertions.assertTrue(result.isLeft());
-        ForecastError error = result.getLeft();
+        ForecastError error = result.left();
         assertThat(error.getCityId(), equalTo(CITY_ID));
     }
     
@@ -69,7 +68,7 @@ public class WeatherServiceTest {
     public void methodReturnsCorrectWeatherForecast() throws IOException, InterruptedException {
         Either<ForecastError, WeatherForecast> result = runWithResponse(mockCorrectResponse());
         Assertions.assertTrue(result.isRight());
-        WeatherForecast forecast = result.get();
+        WeatherForecast forecast = result.right();
         assertThat(forecast.getCityId(), equalTo(CITY_ID));
         assertThat(forecast.getDay(), equalTo(TIME));
         assertThat(forecast.getSunrise(), equalTo(SUNRISE));

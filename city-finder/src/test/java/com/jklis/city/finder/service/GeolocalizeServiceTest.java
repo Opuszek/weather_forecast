@@ -3,7 +3,7 @@ package com.jklis.city.finder.service;
 import com.jklis.database.entity.CityError;
 import com.jklis.database.entity.CityLocation;
 import com.jklis.database.entity.CitySimple;
-import io.vavr.control.Either;
+import com.jklis.utilities.Either;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -83,7 +83,7 @@ public class GeolocalizeServiceTest {
     public void methodReturnsCorrectCityLocation() throws IOException, InterruptedException {
         Either<CityError, CityLocation> result = runWithResponse(mockCorrectResponse());
         Assertions.assertTrue(result.isRight());
-        CityLocation location = result.get();
+        CityLocation location = result.right();
         assertThat(location.getId(), equalTo(CITY_ID));
         assertThat(location.getLongitude(), equalTo(LONGITUDE));
         assertThat(location.getLatitude(), equalTo(LATITUDE));
@@ -119,7 +119,7 @@ public class GeolocalizeServiceTest {
 
     private void isCityError(Either<CityError, CityLocation> result, boolean invalidate) {
         Assertions.assertTrue(result.isLeft());
-        CityError cityError = result.getLeft();
+        CityError cityError = result.left();
         assertThat(cityError.getId(), equalTo(CITY_ID));
         assertThat(cityError.isInvalid(), is(invalidate));
     }

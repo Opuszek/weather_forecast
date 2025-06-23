@@ -5,7 +5,9 @@ import com.jklis.database.entity.CityError;
 import com.jklis.database.entity.CityLocation;
 import com.jklis.database.entity.CitySimple;
 import com.jklis.database.service.DatabaseService;
-import io.vavr.control.Either;
+import com.jklis.utilities.Either;
+import static com.jklis.utilities.Utilities.getLeftEithers;
+import static com.jklis.utilities.Utilities.getRightEithers;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
@@ -40,28 +42,14 @@ public class CityFinder {
                         System.lineSeparator(), listErrors(errs));
         LOGGER.log(Level.INFO, logSuccess + logErrors);
     }
-    
+
     private static String listErrors(Collection<CityError> locs) {
         return locs.stream()
                 .collect(Collectors.toMap(CityError::getError, v -> 1L, Long::sum))
                 .entrySet().stream().map(
-                        e -> String.format("Exception %s occured %d times", 
+                        e -> String.format("Exception %s occured %d times",
                                 e.getKey(), e.getValue())
                 ).collect(Collectors.joining("," + System.lineSeparator()));
-    }
-
-    private static <T, Y> List<T> getLeftEithers(Collection<Either<T, Y>> eithers) {
-        return eithers.stream()
-                .filter(Either::isLeft)
-                .map(Either::getLeft)
-                .collect(Collectors.toList());
-    }
-
-    private static <T, Y> List<Y> getRightEithers(Collection<Either<T, Y>> eithers) {
-        return eithers.stream()
-                .filter(Either::isRight)
-                .map(Either::get)
-                .collect(Collectors.toList());
     }
 
 }

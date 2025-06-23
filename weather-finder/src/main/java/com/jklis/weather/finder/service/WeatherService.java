@@ -3,8 +3,8 @@ package com.jklis.weather.finder.service;
 import com.jklis.database.entity.CityLocation;
 import com.jklis.database.entity.ForecastError;
 import com.jklis.database.entity.WeatherForecast;
+import com.jklis.utilities.Either;
 import com.jklis.weather.finder.exception.InvalidResponseException;
-import io.vavr.control.Either;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -37,9 +37,9 @@ public class WeatherService {
 
     public Either<ForecastError,WeatherForecast> getWeatherForecast(CityLocation location) {
         try {
-        return Either.right(getWeatherDetailsPriv(location));
+        return Either.withRight(getWeatherDetailsPriv(location));
         } catch (Exception ex) {
-            return Either.left(
+            return Either.withLeft(
                     new ForecastError()
                     .setCityId(location.getId())
                     .setUnixTime(System.currentTimeMillis()/1000)

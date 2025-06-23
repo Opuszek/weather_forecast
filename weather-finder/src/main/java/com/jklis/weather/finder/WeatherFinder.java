@@ -3,8 +3,10 @@ package com.jklis.weather.finder;
 import com.jklis.database.entity.ForecastError;
 import com.jklis.database.entity.WeatherForecast;
 import com.jklis.database.service.DatabaseService;
+import com.jklis.utilities.Either;
+import static com.jklis.utilities.Utilities.getLeftEithers;
+import static com.jklis.utilities.Utilities.getRightEithers;
 import com.jklis.weather.finder.service.WeatherService;
-import io.vavr.control.Either;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
@@ -50,17 +52,4 @@ public class WeatherFinder {
                 ).collect(Collectors.joining("," + System.lineSeparator()));
     }
 
-    private static <T, Y> List<T> getLeftEithers(Collection<Either<T, Y>> eithers) {
-        return eithers.stream()
-                .filter(Either::isLeft)
-                .map(Either::getLeft)
-                .collect(Collectors.toList());
-    }
-
-    private static <T, Y> List<Y> getRightEithers(Collection<Either<T, Y>> eithers) {
-        return eithers.stream()
-                .filter(Either::isRight)
-                .map(Either::get)
-                .collect(Collectors.toList());
-    }
 }
