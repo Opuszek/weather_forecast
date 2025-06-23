@@ -43,9 +43,9 @@ public class WeatherService {
                     new ForecastError()
                     .setCityId(location.getId())
                     .setUnixTime(System.currentTimeMillis()/1000)
-                    .setError(ex.getClass().getName())
-            );
-        
+                    .setError(String.format("%s: %s", 
+                            ex.getClass().getName(), ex.getMessage()))
+            );      
         }
     }
     

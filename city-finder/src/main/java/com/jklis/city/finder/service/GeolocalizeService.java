@@ -6,7 +6,6 @@ import com.jklis.database.entity.CityLocation;
 import com.jklis.database.entity.CitySimple;
 import io.vavr.control.Either;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
