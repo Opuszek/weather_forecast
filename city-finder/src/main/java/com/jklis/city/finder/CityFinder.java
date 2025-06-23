@@ -32,19 +32,25 @@ public class CityFinder {
 
     private static final Logger LOGGER = Logger.getLogger(CityFinder.class.getName());
 
-    public static void main(String[] args) throws SQLException, InterruptedException, ExecutionException {
+    public static void main(String[] args) throws SQLException {
         List<Either<CityError, CityLocation>> results = new ArrayList<>();
         final ExecutorService executor
                 = Executors.newFixedThreadPool(THREADS_NUMBER);
         List<CitySimple> unlocatedCities = databaseService.getListOfUnlocatedCities();
+        
         List<Future<Either<CityError, CityLocation>>> futures = unlocatedCities.stream()
                 .map(city -> functionToCallable(geolocalizeService::geolocalize, city))
                 .map(executor::submit)
                 .collect(Collectors.toList());
         for (var future : futures) {
-            results.add(future.get());
+            try {
+                results.add(future.get());
+            } catch (InterruptedException | ExecutionException ex) {
+                LOGGER.log(Level.SEVERE, null, ex);
+            }
         }
         executor.shutdown();
+        
         databaseService.updateCityLocations(getRightEithers(results));
         databaseService.logCityLocationErrors(getLeftEithers(results));
         logResults(results);
