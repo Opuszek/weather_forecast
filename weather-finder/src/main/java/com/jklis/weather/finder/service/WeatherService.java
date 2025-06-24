@@ -61,7 +61,10 @@ public class WeatherService {
                 .build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() < 200 || response.statusCode() >= 300) {
-            throw new InvalidResponseException();
+            throw new InvalidResponseException(
+                    String.format("Status code: %s,%sResponse body: %s", 
+                            response.statusCode(), System.lineSeparator(), response.body())
+            );
         }
         JSONObject daily = new JSONObject(response.body()).getJSONObject("daily");
         return new WeatherForecast.WeatherForecastBuilder()
